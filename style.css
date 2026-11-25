@@ -214,3 +214,14 @@
 
 /* Stage78: first-place-only result message; existing font retained. */
 .winner-message{color:#16803d;font-size:13px;font-weight:600;line-height:1.6;margin:4px 0 5px;overflow-wrap:anywhere;}
+
+/* Stage149: presentation only */
+.practical-rank-body > p.winner-message{color:#16803d;font-size:13px;font-weight:600;line-height:1.6;}
+.result-brief{font-size:13px;line-height:1.6;overflow-wrap:anywhere;}
+.result-brief span{display:block;margin-top:4px;}
+.result-feature summary,.practical-why summary,.practical-limitations summary{cursor:pointer;font-weight:600;}
+
+/* Stage152: visible result text spacing; preserve native details behavior. */
+.result-brief b{display:block;margin-bottom:8px;}
+.result-brief span+span{margin-top:8px;}
+.practical-why[open] li span,.answer-review[open] .review-question,.answer-review[open] .review-answer{display:block;}
