@@ -226,3 +226,27 @@
 .result-brief span+span{margin-top:8px;}
 .practical-why[open] li span,.answer-review[open] .review-question,.answer-review[open] .review-answer{display:block;}
 .hf-share-dialog{width:min(680px,94vw);max-height:90vh;overflow:auto;border:1px solid #b8dbe8;border-radius:20px;padding:20px;color:var(--ink);background:white;box-shadow:0 16px 60px #102c4833}.hf-share-dialog::backdrop{background:#102c48aa}.hf-share-dialog h2{margin:0 0 12px}.hf-share-dialog p{font-size:14px;line-height:1.6}.hf-share-preview{display:block;width:100%;height:auto;border-radius:10px}.hf-share-preview[hidden]{display:none}.hf-share-actions{display:flex;flex-wrap:wrap;gap:8px}.hf-share-actions button{flex:1 1 140px;border:1px solid #b8dbe8;border-radius:10px;background:#e8f6fb;color:#102c48;padding:12px;font:inherit;cursor:pointer}.hf-share-actions button[data-action=x]{background:#151515;color:white}.hf-share-actions button:disabled{opacity:.45;cursor:default}
+
+/* Stage160: creator information on home only */
+.creator-card{margin:28px 0 16px;padding:clamp(16px,4vw,28px);border:1px solid #c9e1ef;border-radius:20px;background:#f0f9fc;color:#17364b;overflow-wrap:anywhere}
+.creator-card h2{margin:8px 0 14px;font-size:clamp(19px,4vw,25px)}.creator-card h2 span{color:#1685ae;margin-left:.4em}
+.creator-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 0;border-top:1px solid #c9e1ef}.creator-row>div{min-width:0;display:grid;gap:5px}.creator-row strong{font-size:13px}.creator-row code,.creator-row a{font-size:16px;color:#175d7c;user-select:text}.creator-row button{flex-shrink:0;font:inherit;font-size:13px;min-height:44px;padding:8px 15px;border:1px solid #b8dbe8;border-radius:10px;background:white;color:#175d7c;cursor:pointer}.creator-row button:focus-visible,.creator-row a:focus-visible{outline:2px solid #1685ae;outline-offset:3px}.creator-card p{font-size:13px;margin:6px 0}.creator-card #creator-copy-status:empty{display:none}.creator-thanks{color:#50778d;text-align:center}
+
+/* Stage161: ordinary library exploration links */
+.library-explore{background:#f2faff;border:1px solid #cce5f1;border-radius:12px;padding:14px;margin:0 0 16px;clear:both}
+.library-explore h3{font-size:15px;color:#245d7d;margin:0 0 10px}
+.library-explore-links{display:flex;gap:8px;flex-wrap:wrap}
+.library-explore-links a{display:flex;align-items:center;justify-content:center;min-height:44px;padding:8px 12px;flex:1 1 200px;border:1px solid #b9dbe9;border-radius:9px;background:#fff;color:#226b96;font-size:13px;font-weight:700;text-decoration:none;text-align:center;overflow-wrap:anywhere;box-sizing:border-box}
+.library-explore-links a:hover{background:#e2f5ff}.library-explore-links a:focus-visible{outline:2px solid #246d98;outline-offset:2px}
+.library-explore p{font-size:11px;line-height:1.65;color:#587589;margin:8px 0 0}
+
+/* Stage162: one official roster link above search controls. */
+.roster-official-link{margin:0 0 16px;max-width:420px}.roster-official-link a{justify-content:flex-start}
+
+/* Stage163: feedback links; independent of result rendering */
+.site-feedback-card{margin:24px 0 32px;padding:clamp(16px,4vw,28px);border:1px solid #c9e1ef;border-radius:20px;background:#f0f9fc;color:#17364b;overflow-wrap:anywhere}
+.site-feedback-card h2{font-size:clamp(19px,4vw,25px);margin:8px 0 10px}
+.site-feedback-card p{font-size:14px;line-height:1.85;margin:0 0 14px;color:#365c73}
+.site-feedback-card .site-feedback-note{font-size:12px;margin:12px 0 0;color:#50778d}
+.site-feedback-card .site-feedback-link{max-width:100%;min-height:44px;text-align:center;white-space:normal;gap:6px}
+@media(max-width:690px){.site-feedback-card .site-feedback-link{width:100%}}
