@@ -19,10 +19,18 @@
     if(cell!==''||row.length){row.push(cell);rows.push(row);}
     return rows;
   }
+  function normalizeDate(raw){
+    const m=String(raw||'').trim().match(/^(\d{4})([-/])(\d{1,2})\2(\d{1,2})$/);
+    if(!m)return '';
+    const y=Number(m[1]), month=Number(m[3]), day=Number(m[4]);
+    const d=new Date(Date.UTC(y,month-1,day));
+    if(d.getUTCFullYear()!==y||d.getUTCMonth()!==month-1||d.getUTCDate()!==day)return '';
+    return `${m[1]}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+  }
   function readEntries(raw){
     const rows=csvRows(raw);const head=rows.shift()||[];
     if(head.length!==4||headers.some((h,i)=>head[i].trim()!==h))throw Error('列名が一致しません');
-    return rows.map((r,i)=>({date:(r[0]||'').trim(),category:(r[1]||'').trim(),opinion:(r[2]||'').trim(),reply:(r[3]||'').trim(),i}))
+    return rows.map((r,i)=>({date:normalizeDate(r[0]),category:(r[1]||'').trim(),opinion:(r[2]||'').trim(),reply:(r[3]||'').trim(),i}))
       .filter(r=>/^\d{4}-\d{2}-\d{2}$/.test(r.date)&&r.category&&r.opinion&&r.reply)
       .sort((a,b)=>b.date.localeCompare(a.date)||b.i-a.i);
   }
