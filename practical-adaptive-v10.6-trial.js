@@ -9,7 +9,7 @@
  const B=()=>typeof window!=='undefined'?window.COMPASS_PRACTICAL:globalThis.COMPASS_PRACTICAL;
  const D=()=>typeof window!=='undefined'?window.COMPASS_DATA:globalThis.COMPASS_DATA;
  const AUDIT=()=>typeof window!=='undefined'?window.COMPASS_HA_HS_SKILL_TAGS:globalThis.COMPASS_HA_HS_SKILL_TAGS;
- const LENGTH=30,VERSION=151; // Stage37 trial; old sessions kept separate
+ const LENGTH=30,VERSION=256; // Stage37 trial; old sessions kept separate
  const EXPERIENCE={yes:'よく遊ぶ',sometimes:'ときどき遊ぶ',no:'最近あまり遊んでいない',unknown:'ほとんど遊んだことがない'};
  const BREADTH={yes:'いろいろなキャラを使う',sometimes:'数人を使う',no:'ほぼ1人だけ使う',unknown:'まだ決まっていない'};
  const PREF={yes:'とても興味がある',sometimes:'少し興味がある',no:'あまり興味がない',unknown:'まだ分からない'};
@@ -97,11 +97,15 @@
  const ORIG=B().questions.map(q=>({...q,bucket:({ 'ロール経験':'roleExperience','ポータル・勝ち筋':'objective','戦闘操作・間合い':'mechanic','カード実技・所持':q.responseMode==='usage'?'usage':'card','転倒（ダウン）・固有技':'down','転倒（ダウン）・カード':'down','転倒（ダウン）・連携':'down','連携・立ち回り':'team'})[q.group]||'mechanic',mode:q.responseMode==='style'?'style':q.responseMode==='usage'?'usage':q.id.startsWith('K')||q.id==='D03'?'cardSkill':'skill',source:'v9106'}));
  // Adaptive-only overrides; fixed baseline is intentionally untouched.
  const overrides={
- F02:{question:'通常攻撃などで遠くから攻撃を続け、敵に接近されないように距離を保てる？',signals:{'trait:range':1},labels:{yes:'安定してできる',sometimes:'ある程度できる',no:'この戦い方をするが苦手',unknown:'普段しない・未経験・判断できない'},weight:1.0},
+ F02:{question:'攻撃手段を問わず、敵に近づかれないように間合いを保ちながら戦える？',signals:{'trait:range':1},labels:{yes:'安定してできる',sometimes:'ある程度できる',no:'この戦い方をするが苦手',unknown:'普段しない・未経験・判断できない'},weight:1.0},
  D03:{question:'攻撃カードで敵を転倒させた後、通常攻撃・DA・HA・別のカードなどで追撃するか、別の行動を取るか判断できる？',signals:{'trait:flex':.5,'trait:skill':.5},mode:'skill',weight:.8},
  T01:{question:'自分の生存用の回復（置き回など）とは別に、味方のために回復や援護を優先することが多い？',signals:{'trait:team':.6,'trait:support':.4},weight:1.1}
  };
  const pilot=globalThis.COMPASS_STAGE70_STYLE||{questions:[],evidence:{},active:[]};
+ const moveAxes=new Set(['NS18','NS19','NS20','NS21','NS22','NS23']);
+ const longHaAxes=new Set(['NS24','NS25','NS26','NS27','NS28']);
+ const rangedCardAxes=new Set(['NS32','NS33','NS34','NS35']);
+ const rangePreferenceAxes=new Set(['NS31',...rangedCardAxes]);
  const active=new Set(pilot.active), extraActive=new Set(pilot.stage75?.addedAxes||[]), NS=pilot.questions.map(q=>Number(q.id.slice(2))<=2?m(q.id,q.question,{'yes':'よくある','sometimes':'ときどきある','no':'あまりない','unknown':'判断できない'}):{...x(q.id,'newStyle',q.question,{['new:'+q.id]:1},1.3,'style'),group:'戦闘スタイル（試作）',newAxis:true,observational:!active.has(q.id)});
  // Stage81: explicit trade-offs; reuse only already scored research evidence.
  const contrasts=[
@@ -151,8 +155,8 @@
   const old=B().relevance(hero,{signals:{'trait:range':1}}), r=RANGE_MEASURED[hero.id];
   const measured=Math.max(0,Math.min(1,.35+.65*(r-6)/2.5));
   return original+q.signals['trait:range']*.3*(measured-old);}
- function factor(q,ans,rel){if(q.stage137)return ans==='yes'?.5:0;if(ans==='unknown')return 0;
-  if(q.id==='NS15')return ({yes:.7,sometimes:.22,no:-.55})[ans]||0;
+ function factor(q,ans,rel){if(q.id==='NS30')return ({yes:.6,sometimes:.2})[ans]||0;if(q.stage137)return ans==='yes'?.5:0;if(ans==='unknown')return 0;
+  if(moveAxes.has(q.id)||longHaAxes.has(q.id)||rangePreferenceAxes.has(q.id))return ({yes:.7,sometimes:.22,no:-.55})[ans]||0;
   if(q.mode==='preference')return ({yes:.4,sometimes:.14,no:-.08})[ans]||0;
   if(q.mode==='haSkill'||q.mode==='hsSkill')return ({yes:.38,sometimes:.11,no:-.55})[ans]||0;
   if(q.id==='D03')return ({yes:.65,sometimes:.18,no:-.9})[ans]||0;
@@ -166,15 +170,18 @@
  const clip=v=>Math.max(0,Math.min(99,v)); const rounded=v=>Math.round(clip(v)*10)/10;
  const applicable=(a)=>a.answer!=='unknown'&&byIdMap[a.id]&&!['meta','gate'].includes(byIdMap[a.id].mode)&&!byIdMap[a.id].newAxis;
  function makeRows(history,cap=.20){const excluded=new Set(excludedIds(history));const heroes=(D()?.heroes||[]).filter(h=>!excluded.has(h.id));
-  const old=history.filter(applicable), fresh=history.filter(a=>a.answer!=='unknown'&&active.has(a.id)&&!byIdMap[a.id].stage137&&!(contrastMap.has(a.id)&&a.answer==='sometimes'));
+  const old=history.filter(applicable), fresh=history.filter(a=>a.answer!=='unknown'&&active.has(a.id)&&a.id!=='NS30'&&!byIdMap[a.id].stage137&&!(contrastMap.has(a.id)&&a.answer==='sometimes'));
   // NS03/04 share a normal-attack evidence budget. Other pilot prompts measure different use preferences, not card execution skills.
-  const normalCount=fresh.filter(a=>['NS03','NS04'].includes(a.id)).length;
+  const moveCount=fresh.filter(a=>moveAxes.has(a.id)).length;
+  const longHaCount=fresh.filter(a=>longHaAxes.has(a.id)).length;
+  const normalCount=fresh.filter(a=>['NS03','NS04','NS31'].includes(a.id)).length;
+  const rangedCardCount=fresh.filter(a=>rangedCardAxes.has(a.id)).length;
   const growthCount=fresh.filter(a=>['NS10','NS17'].includes(a.id)).length;
   const buffCount=fresh.filter(a=>['NS06','NS07'].includes(a.id)).length;
-  const overlap={NS06:['K11'],NS07:['K12'],NS14:['AU03','AU05']};
-  const overlapCount=a=>(overlap[a.id]||[]).filter(id=>old.some(x=>x.id===id)).length;
+  const overlap={NS06:['K11'],NS07:['K12'],NS08:['K06','AU06'],NS29:['AO13'],NS14:['AU03','AU05']};
+  const overlapCount=a=>(overlap[a.id]||[]).filter(id=>old.some(x=>x.id===id)).length+((a.id==='NS33'&&fresh.some(x=>x.id==='NS08')||a.id==='NS08'&&fresh.some(x=>x.id==='NS33'))?1:0);
   const contrastAxes=new Set(fresh.filter(a=>contrastMap.has(a.id)).flatMap(a=>contrastMap.get(a.id).contrast));
-  const nw=a=>byIdMap[a.id].weight/(contrastMap.has(a.id)?Math.max(1,...contrastMap.get(a.id).contrast.map(id=>fresh.filter(b=>contrastMap.get(b.id)?.contrast.includes(id)).length)):contrastAxes.has(a.id)?2:1)/(1+0.5*overlapCount(a))/(['NS03','NS04'].includes(a.id)?Math.max(1,normalCount):['NS06','NS07'].includes(a.id)?Math.max(1,buffCount):['NS10','NS17'].includes(a.id)?Math.max(1,growthCount):1);
+  const nw=a=>byIdMap[a.id].weight/(contrastMap.has(a.id)?Math.max(1,...contrastMap.get(a.id).contrast.map(id=>fresh.filter(b=>contrastMap.get(b.id)?.contrast.includes(id)).length)):contrastAxes.has(a.id)?2:1)/(1+0.5*overlapCount(a))/(['NS03','NS04','NS31'].includes(a.id)?Math.max(1,normalCount):rangedCardAxes.has(a.id)?Math.max(1,rangedCardCount):['NS06','NS07'].includes(a.id)?Math.max(1,buffCount):['NS10','NS17'].includes(a.id)?Math.max(1,growthCount):moveAxes.has(a.id)?Math.max(1,moveCount):longHaAxes.has(a.id)?Math.max(1,longHaCount):1);
   const oldWeights=new Map();for(const a of old){const q=byIdMap[a.id];if(q.mode==='cardSkill'&&a.answer!=='no')continue;const k=dupMap.get(q.id)||q.id;oldWeights.set(k,Math.max(oldWeights.get(k)||0,q.weight));}
   const WB=[...oldWeights.values()].reduce((a,b)=>a+b,0),WN=fresh.reduce((s,a)=>s+nw(a),0),WL=fresh.filter(a=>!extraActive.has(a.id)).reduce((s,a)=>s+nw(a),0),WE=WN-WL,p0=WL?Math.min(cap,WL/(WB+WL)):0;
   return heroes.map(hero=>{let raw=0,total=0,covered=0,verified=0,strengths=[],weaknesses=[];const slots=new Map();
@@ -201,9 +208,13 @@
    const sw=[...newSlots.values()].reduce((n,z)=>n+z.q.weight,0);
    const stage137Share=sw?Math.min(Math.max(0,cap-alpha),sw/(WB+WL+WE+sw)):0;
    for(const {q,e,a} of newSlots.values())if(stage137Share>0)newReasons.push({q,ans:a.answer,delta:q.weight*.5,rel:1,reason:e.reason});
-   const score=rounded(base+legacyAlpha*(sn-base)+(WE?extraBudget*extraDelta/WE:0)+stage137Share*22.5);
+   // Stage254: niche deck preference uses only spare contribution budget, no shared denominator or penalty.
+   const teleAnswer=history.find(a=>a.id==='NS30')?.answer, tele=pilot.evidence.NS30?.[hero.id];
+   const teleFactor=factor(byIdMap.NS30,teleAnswer,1),teleShare=tele?.v>0&&teleFactor>0?Math.min(.035,Math.max(0,cap-alpha-stage137Share),.45/(WB+WL+WE+sw+.45))*tele.v:0;
+   if(teleShare>0)newReasons.push({q:byIdMap.NS30,ans:teleAnswer,delta:teleShare*45*teleFactor,rel:tele.v,reason:tele.reason});
+   const score=rounded(base+legacyAlpha*(sn-base)+(WE?extraBudget*extraDelta/WE:0)+stage137Share*22.5+teleShare*45*teleFactor);
    strengths.sort((a,b)=>b.delta-a.delta);weaknesses.sort((a,b)=>a.delta-b.delta);
-   return {hero,score,baseScore:rounded(base),raw,coverage:total?covered/total:0,matchedQuestions:verified,totalEvidence:total,strengths,weaknesses,newReasons,newCoverage:WN?(confirmed+extraConfirmed)/WN:0,newShare:alpha+stage137Share,newScore:sn};
+   return {hero,score,baseScore:rounded(base),raw,coverage:total?covered/total:0,matchedQuestions:verified,totalEvidence:total,strengths,weaknesses,newReasons,newCoverage:WN?(confirmed+extraConfirmed)/WN:0,newShare:alpha+stage137Share+teleShare,newScore:sn};
   }).sort(sortRows);
  }
  // Experimental independent proximity contexts. No role is a ranking quota or exclusion.
@@ -222,7 +233,10 @@
   if(has('NS12')&&(has('NS06')||has('NS07')))add('rearBuff','後方自強化・デバフ火力型',['NS12','NS06','NS07'],r=>research(r.hero,'NS12')&&((has('NS06')&&research(r.hero,'NS06'))||(has('NS07')&&research(r.hero,'NS07'))));
   if(has('NS11'))add('card','攻撃カード火力型',['NS11','NS05','F08','AR02'],r=>match(r.hero,'NS11'));
   if(has('NS13')||has('NS14'))add('instantDefense','カード即時発動・自衛型',['NS13','NS14','NS06','AU03','AU05'],r=>(has('NS13')&&relevance(r.hero,byIdMap.NS13)>0)||(has('NS14')&&relevance(r.hero,byIdMap.NS14)>0));
-  if(has('NS15'))add('haMove','HA位置調整型',['NS15','AO06','AF04','AF05','NS16'],r=>relevance(r.hero,byIdMap.NS15)>0);
+  for(const [id,label] of [["NS18", "地点指定型ワープ"], ["NS19", "敵選択型ワープ"], ["NS20", "事前マーキング型ワープ"], ["NS21", "HA命中型ワープ"], ["NS22", "突進・飛び込み型"], ["NS23", "後退・帰還型"]])if(has(id))add(id,label,[id,'AO06','AF04','AF05'],r=>relevance(r.hero,byIdMap[id])>0);
+  for(const [id,label] of [["NS24", "長距離・狙撃型"], ["NS25", "長距離・直線範囲型"], ["NS26", "長距離・着弾型"], ["NS27", "長距離・持続型"], ["NS28", "長距離・妨害型"]])if(has(id))add(id,label,[id,'NS12','R03','F02'],r=>relevance(r.hero,byIdMap[id])>0);
+  if(has('NS08'))add('selfCombo','状態異常からの自己追撃型',['NS08','K06','NS04','NS07'],r=>match(r.hero,'NS08'));
+  if(has('NS29'))add('persistentHS','設置・残留HS制圧型',['NS29','AO13','AS02'],r=>match(r.hero,'NS29'));
   if(has('NS10'))add('growthHS','HS段階成長型',['NS10','NS04','NS09','NS05'],r=>match(r.hero,'NS10'));
   if(has('NS17'))add('growthAction','行動蓄積成長型',['NS17','NS04','NS09','NS05'],r=>match(r.hero,'NS17'));
   // Legacy near/far kept only as reference when confirmed; never max-merge scores.
@@ -292,7 +306,7 @@
   else if(ctx.narrow){needNow.roleStyle=4;needNow.preference=2;needNow.card=2;needNow.usage=1;}
   else if(ctx.multi){needNow.roleStyle=4;}
   if(!ctx.novice&&(positive(ctx.by.NS01)||positive(ctx.by.NS02))&&positive(ctx.by.NS12))needNow.newStyle=5;
-  let available=POOL.filter(q=>(!q.stage137||(!q.observational&&!asked.some(p=>p.stage137)&&!used.has(q.parent)&&cand.some(h=>relevance(h,q)>0)))&&!used.has(q.id)&&!['meta','roleExperience','contrast','gate'].includes(q.bucket)&&((ctx.counts[q.bucket]||0)<(limits[q.bucket]||8)));
+  let available=POOL.filter(q=>q.id!=='NS15'&&(!rangePreferenceAxes.has(q.id)||(history.filter(a=>rangePreferenceAxes.has(a.id)).length<2&&cand.some(h=>relevance(h,q)>0)))&&(q.id!=='NS30'||(!ctx.novice&&history.length>=13&&history.length<=24&&(['NS11','AO06','AR02','F08','AK01','AK02','AK03','AK04'].some(id=>positive(ctx.by[id])))&&cand.slice(0,5).some(h=>relevance(h,q)>=1)))&&(!['NS08','NS29'].includes(q.id)||cand.some(h=>relevance(h,q)>0))&&(!longHaAxes.has(q.id)||((positive(ctx.by.R03)||positive(ctx.by.F02)||positive(ctx.by.NS12))&&history.filter(a=>longHaAxes.has(a.id)).length<2&&cand.some(h=>relevance(h,q)>0)))&&(!moveAxes.has(q.id)||history.filter(a=>moveAxes.has(a.id)).length<2)&&(!q.stage137||(!q.observational&&!asked.some(p=>p.stage137)&&!used.has(q.parent)&&cand.some(h=>relevance(h,q)>0)))&&!used.has(q.id)&&!['meta','roleExperience','contrast','gate'].includes(q.bucket)&&((ctx.counts[q.bucket]||0)<(limits[q.bucket]||8)));
   if(ctx.novice)available=available.filter(q=>!['usage','card','roleStyle','down','haHs','roleExperience','newStyle'].includes(q.bucket));
   const distinct=available.filter(q=>!dupMap.has(q.id)||!asked.some(p=>p.id!==q.id&&dupMap.get(p.id)===dupMap.get(q.id)));if(distinct.length)available=distinct;
   const deficitCats=Object.entries(needNow).filter(([b,n])=>(ctx.counts[b]||0)<n).map(([b])=>b);
@@ -313,12 +327,46 @@
     if(growth.length)return growth[0].q.id;
    }
   }
+  if(!ctx.novice&&history.length>=11&&history.length<=22&&slots>=6&&(deficitCount<slots||deficitCats.includes('newStyle'))){
+   const related=['R03','F02','NS12','AR03','AO03','AO08','NS11','AK02','K03','AU06'].some(id=>positive(ctx.by[id]));
+   const prior=history.filter(a=>rangePreferenceAxes.has(a.id));
+   if(related&&prior.length<2){const opts=available.filter(q=>rangePreferenceAxes.has(q.id));
+    const ids=prior.length?prior[0].id==='NS31'?['NS32','NS33','NS34','NS35']:['NS31']:['NS31','NS32'];
+    const selected=ids.map(id=>opts.find(q=>q.id===id)).find(Boolean);if(selected)return selected.id;
+   }
+  }
+  if(!ctx.novice && history.length>=12 && history.length<=23 && slots>=5 && !history.some(a=>['NS08','NS29'].includes(a.id)) && (deficitCount<slots||deficitCats.includes('newStyle'))){
+   const options=available.filter(q=>q.id==='NS08'&&(positive(ctx.by.K06)||positive(ctx.by.AU06)||positive(ctx.by.NS07))||q.id==='NS29'&&positive(ctx.by.AO13));
+   if(options.length)return options[0].id;
+  }
+  if(!ctx.novice && history.length>=12 && history.length<=23 && slots>=5 && (positive(ctx.by.R03)||positive(ctx.by.F02)||positive(ctx.by.NS12))){
+   const prior=history.filter(a=>longHaAxes.has(a.id));
+   const opts=available.filter(q=>longHaAxes.has(q.id)&&cand.some(h=>relevance(h,q)>0));
+   if(prior.length<2 && opts.length && (!prior.length || (history.length>=18 && history.length-history.findIndex(a=>a.id===prior[0].id)>=3)) && (deficitCount<slots||deficitCats.includes('newStyle'))){
+    const rank=q=>Math.min(...cand.map((h,i)=>relevance(h,q)>0?i:999));
+    return opts.sort((a,b)=>rank(a)-rank(b)||a.id.localeCompare(b.id))[0].id;
+   }
+  }
+  if(!ctx.novice && history.length>=13 && history.length<=22 && slots>=5){
+   const prior=history.filter(a=>moveAxes.has(a.id));
+   const motion=positive(ctx.by.AO06)||positive(ctx.by.AF04)||positive(ctx.by.AF05)||positive(ctx.by.R01);
+   const leaders=cand;
+   const opts=available.filter(q=>moveAxes.has(q.id)&&leaders.some(h=>relevance(h,q)>0));
+   if(prior.length<2 && (motion||opts.some(q=>leaders.slice(0,5).some(h=>relevance(h,q)>0))) && (!prior.length || (history.length>=16&&history.length-history.findIndex(a=>a.id===prior[0].id)>=2)) && opts.length){
+    const rank=q=>Math.min(...leaders.map((h,i)=>relevance(h,q)>0?i:99));
+    const warpOnly=opts.filter(q=>['NS18','NS19','NS20','NS21'].includes(q.id));
+    const pool=warpOnly.length?warpOnly:opts;
+    return pool.sort((a,b)=>rank(a)-rank(b)||a.id.localeCompare(b.id))[0].id;
+   }
+  }
+  // Niche follow-up after primary mechanics: allow one discretionary slot only for a top-three candidate and explicit positive card/mobility/attack answer if quotas are tight.
+  if(history.length>=15&&history.length<=24&&(deficitCount<slots||deficitCats.includes('newStyle')||(['NS11','AO06','AR02','F08','AK01','AK02','AK03','AK04'].some(id=>ctx.by[id]==='yes')&&makeRows(history).slice(0,3).some(r=>relevance(r.hero,byIdMap.NS30)>=1)))&&available.some(q=>q.id==='NS30'))return 'NS30';
   if(deficitCount>=slots){const filtered=available.filter(q=>deficitCats.includes(q.bucket));if(filtered.length)available=filtered;}
   if(!available.length)throw Error('Question pool exhausted');
   // Candidate-specific mechanics deserve a slot, not a fixed hero bonus.
   // Reserve at most two follow-ups, only when relevant to current candidates
   // and the category quota still permits them.
-  const mechanicsIds=['NS13','NS14','NS15','NS16','NS10','NS17'];
+  const mechanicsIds=['NS13','NS14',...moveAxes,...longHaAxes,'NS16','NS10','NS17'];
   const askedMechanics=history.filter(a=>mechanicsIds.includes(a.id)).length;
   if(!ctx.novice&&((history.length===17&&askedMechanics===0)||(history.length===22&&askedMechanics<2))){
    const top=cand.slice(0,12);
@@ -348,10 +396,11 @@
     if(q.id==='NS05'&&(positive(ctx.by.AR02)||positive(ctx.by.F08)))observationBias+=.45;
     if(q.id==='NS08'&&(positive(ctx.by.K06)||positive(ctx.by.AU06)))observationBias+=.6;
     if(q.id==='NS09'&&positive(ctx.by.NS06))observationBias+=.6;
+    if(q.id==='NS30')observationBias-=1.1;
     if(extraActive.has(q.id)){
      const top=cand.slice(0,12),matched=top.filter(h=>relevance(h,q)>0).length;
      if(matched>0)observationBias+=.6+Math.min(.65,matched*.16);
-     const related={NS06:['K11','NS04'],NS07:['K12','NS04'],NS13:['NS11','AU05','AU03'],NS14:['AU03','AU05'],NS15:['AO06','AF04','AF05'],NS16:['AS02','AS04','AS05']}[q.id]||[];
+     const related={NS06:['K11','NS04'],NS07:['K12','NS04'],NS08:['K06','AU06','NS07'],NS33:['K06','AU06'],NS29:['AO13','AS02'],NS13:['NS11','AU05','AU03'],NS14:['AU03','AU05'],NS18:['AO06','AF04','AF05'],NS19:['AO06','AF04','AF05'],NS20:['AO06','AF04','AF05'],NS21:['AO06','AF04','AF05'],NS22:['AO06','AF04','AF05'],NS23:['AO06','AF04','AF05'],NS16:['AS02','AS04','AS05']}[q.id]||[];
      if(related.some(id=>positive(ctx.by[id])))observationBias+=.4;
     }
    }
@@ -360,7 +409,7 @@
   });ranked.sort((a,b)=>b.score-a.score||a.q.id.localeCompare(b.q.id));return ranked[0].q.id;
  }
  function session(){const now=new Date();const seed=0;return {version:VERSION,createdAt:now.toISOString(),seed,history:[],questionId:'EX00'};}
- function safeSession(s){if(!s||s.version!==VERSION||!Number.isInteger(s.seed)||!Array.isArray(s.history)||s.history.length>LENGTH)return false;
+ function safeSession(s){if(!s||(s.version!==VERSION&&!([151,250,252,253,254,255].includes(s.version)&&s.history?.length===LENGTH))||!Number.isInteger(s.seed)||!Array.isArray(s.history)||s.history.length>LENGTH)return false;
   const ids=new Set();for(const a of s.history){if(!a||!Object.hasOwn(byIdMap,a.id)||!Object.hasOwn(B().RESP,a.answer)||ids.has(a.id))return false;ids.add(a.id);}
   if(s.questionId!==null&&!Object.hasOwn(byIdMap,s.questionId))return false;
   if(s.questionId&&ids.has(s.questionId))return false;
@@ -372,7 +421,7 @@
  function compute(s){if(!safeSession(s))throw Error('不正な適応実戦診断セッション');const trial=trialRows(s.history),ranked=trial.ranked,nonmeta=s.history.filter(a=>!['meta','gate'].includes(byIdMap[a.id]?.mode)&&!byIdMap[a.id]?.newAxis);const known=nonmeta.filter(a=>a.answer!=='unknown').length;const positives=nonmeta.filter(a=>['yes','sometimes'].includes(a.answer)).length;
   const ctx=contextOf(s.history),hasEvidence=known>=8&&positives>=3;
   const groups=new Set(nonmeta.filter(a=>a.answer!=='unknown').map(a=>byIdMap[a.id].bucket));const quality=known>=19&&groups.size>=5?'比較的多い':known>=12&&groups.size>=4?'中程度':'少なめ';
-  return {ranked,excludedIds:excludedIds(s.history),known,positives,lowDistinction:new Set(nonmeta.filter(a=>a.answer!=='unknown').map(a=>a.answer)).size<2,unknown:nonmeta.length-known,total:LENGTH,ready:hasEvidence,confidence:quality,novice:ctx.novice,casual:ctx.casual,singleHero:ctx.narrow,multiRole:ctx.multi,usedQuestions:s.history.map(a=>a.id),styleProfiles:trial.profiles,combinedReference:trial.baseline,roleTop:roleTop(ranked,hasEvidence,s.history),comparisons:hasEvidence?[0,.1,.2,.3].map(cap=>({cap,ranked:makeRows(s.history,cap)})):[],model:'Stage137 暫定20%上限・追加質問の限定試験採点。未確認は採点しない。勝率の推定ではありません。'};
+  return {ranked,excludedIds:excludedIds(s.history),known,positives,lowDistinction:new Set(nonmeta.filter(a=>a.answer!=='unknown').map(a=>a.answer)).size<2,unknown:nonmeta.length-known,total:LENGTH,ready:hasEvidence,confidence:quality,novice:ctx.novice,casual:ctx.casual,singleHero:ctx.narrow,multiRole:ctx.multi,usedQuestions:s.history.map(a=>a.id),styleProfiles:trial.profiles,combinedReference:trial.baseline,roleTop:roleTop(ranked,hasEvidence,s.history),comparisons:hasEvidence?[0,.1,.2,.3].map(cap=>({cap,ranked:makeRows(s.history,cap)})):[],model:'Stage254 暫定20%上限・着弾型HA修正とテレパス補助評価。未確認は採点しない。勝率の推定ではありません。'};
  }
  return {questions:B().questions,questionPool:POOL,byId:id=>byIdMap[id]||null,labelsFor,answerLabels,answerFactor:factor,session,safeSession,answer,back,compute,relevance,RESP:B().RESP,DOWN_PROFILES:B().DOWN_PROFILES,FOLLOWUP_ONLY_PROFILES:B().FOLLOWUP_ONLY_PROFILES,USER_DOWN_NOTES:B().USER_DOWN_NOTES,DOWN_SOURCES:B().DOWN_SOURCES,DOWN_GUIDE:B().DOWN_GUIDE,CARD_DOWN_PROFILES:B().CARD_DOWN_PROFILES,PIERCE_CARD_DOWN_PROFILES:B().PIERCE_CARD_DOWN_PROFILES,ASSUMED_CARD_DOWN_MIN_COMPAT:B().ASSUMED_CARD_DOWN_MIN_COMPAT,inferredCardDown:B().inferredCardDown,cardDownProfile:B().cardDownProfile,CARD_DOWN_GENERAL_SOURCES:B().CARD_DOWN_GENERAL_SOURCES, nextQuestionId, contextOf, excludedIds, makeRows, roleTop, VERSION,LENGTH};
 });

@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#f3faff" />
   <meta name="description" content="104ヒーローから選ぶ2つの診断。お手軽診断20問、本気診断30問。非公式ファンメイド。" />
-  <title>#コンパス HERO FINDER v10.21 Stage171｜#コンパス 非公式ヒーロー診断</title>
+  <title>#コンパス HERO FINDER v10.21 Stage258｜#コンパス 非公式ヒーロー診断</title>
   <link rel="stylesheet" href="style.css?v=10.21" />
   <link rel="stylesheet" href="feedback-replies.css?v=1" />
+  <link rel="stylesheet" href="personality-display.css?v=225" />
 </head>
 <body>
   <div class="ambient ambient-left" aria-hidden="true"></div><div class="ambient ambient-right" aria-hidden="true"></div>
@@ -17,7 +18,7 @@
       <span class="brand-text">HERO <b>FINDER</b><small>#コンパス 非公式ヒーロー診断</small></span>
     </a>
     <nav aria-label="サイトメニュー" class="header-nav">
-      <span class="version-badge">v10.21 <span>図鑑・情報修正</span></span>
+      <span class="version-badge">v10.21 <span>Stage258</span></span>
       <button type="button" class="text-button" id="nav-roster">すべてのヒーローを見る <span aria-hidden="true">↗</span></button>
     </nav>
   </div></header>
@@ -77,6 +78,8 @@
         <a class="secondary-button site-feedback-link" href="feedback-replies.html">ご意見への回答を見る ↗</a></div>
         <p class="site-feedback-note">Googleフォームが開きます。個人情報の記載はお控えください。継続的な更新や個別の対応をお約束するものではありません。</p>
       </section>
+      <!-- Stage258 temporary bonsai checkbox: remove this block after the event. -->
+      <div style="margin:12px 0;text-align:center"><label for="bonsai-secret-check" style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;padding:8px 12px"><input type="checkbox" id="bonsai-secret-check" autocomplete="off" style="width:18px;height:18px;margin:0;cursor:pointer">盆栽専用ボタン</label></div>
     </section>
 
     <section id="quiz" class="screen quiz-screen" hidden aria-labelledby="quiz-title">
@@ -143,18 +146,18 @@
     </section>
 
     <section id="roster" class="screen roster-screen" hidden aria-labelledby="roster-title">
-      <div class="roster-head"><button class="back-link" type="button" id="roster-back">← 戻る</button><div class="eyebrow small">HERO LIBRARY</div><h1 id="roster-title">104人のヒーローたち。</h1><p>104人の戦い方・性格・見た目を調べられる図鑑。名前や特徴をスペースで区切って検索できます。研究資料の未確認・解釈候補も区別して表示します。</p><p class="research-disclaimer">※掲載内容は独自の調査・分析に基づいており、実際の仕様や公式設定、事実とは異なる場合がございます。</p></div>
+      <div class="roster-head"><button class="back-link" type="button" id="roster-back">← 戻る</button><div class="eyebrow small">HERO LIBRARY</div><h1 id="roster-title">104人のヒーローたち。</h1><p>104人の戦い方・性格・見た目を調べられる図鑑。名前や特徴をスペースで区切って検索できます。研究資料の未確認・解釈候補も区別して表示します。</p><p class="research-disclaimer">※掲載内容は独自の調査・分析に基づいており、実際の仕様や公式設定、事実とは異なる場合がございます。 すべての内容について確認が完了しているわけではありません。誤りや解釈の相違などにお気づきの際は、<a href="https://docs.google.com/forms/d/e/1FAIpQLSegJ8OrirPu2UzSAD5fwn0KTHsL1WHJQ3n9JlsrTg4LAg5vhg/viewform?usp=header" target="_blank" rel="noopener noreferrer">お問い合わせフォーム</a>よりご連絡ください。</p></div>
       <div class="roster-official-link library-explore-links" aria-label="公式サイトへのリンク"><a href="https://app.nhn-playart.com/compass/hero.nhn" target="_blank" rel="noopener noreferrer">#コンパス公式オリジナルヒーロー一覧 ↗</a></div>
       <div class="roster-controls"><label class="search-box"><span aria-hidden="true">⌕</span><input type="search" id="hero-search" placeholder="名前・コラボ・性格・衣装など（複数語OK）" autocomplete="off" aria-label="ヒーローの特徴で検索" /></label><select id="hero-role" aria-label="ロールで絞り込み"><option value="">すべてのロール</option><option>スプリンター</option><option>アタッカー</option><option>ガンナー</option><option>タンク</option></select><select id="hero-scope" aria-label="検索する情報"><option value="">すべての情報</option><option value="basic">基本設定</option><option value="combat">戦い方</option><option value="personality">性格・人物像</option><option value="appearance">見た目</option></select></div>
       <p id="roster-count" class="roster-count"></p><div id="roster-grid" class="roster-grid"></div>
     </section>
   </main>
-  <footer class="site-footer"><div class="footer-inner"><span class="footer-logo">HERO <b>FINDER</b></span><span>非公式ファンメイド作品／#コンパス公式とは関係ありません。</span><span>v10.21 Stage171</span></div><details class="release-history"><summary>更新履歴（v10.21）</summary><div class="release-history-body"><h3>v10.21 · Stage171</h3><p>図鑑のコラボ検索漏れを修正。人物紹介38人分の表現を整理。ポプ子＆ピピ美、アイズのカード傾向を訂正。更新履歴を追加。</p><h3>v10.20 · Stage168–170</h3><p>ご意見への回答ページと公開スプレッドシート連携を追加。日付形式による表示不具合を修正。</p><h3>Stage164–167</h3><p>キャラクター情報の訂正、推しキャラ診断の質問・適応出題を改善。</p><h3>v10.19 · Stage163</h3><p>ご意見・ご要望フォームを追加。</p><h3>v10.17–10.18 · Stage161–162</h3><p>図鑑画像の拡大と公式ヒーロー一覧リンクを追加・配置調整。</p><h3>v10.16 · Stage160</h3><p>制作者情報とコードのコピー機能を追加。</p><h3>v10.15 · Stage159</h3><p>診断結果画像の生成・保存・共有機能を追加。</p><h3>v10.14 · Stage152–158</h3><p>結果画面の表示改善と正式公開用パッケージの準備。</p><p class="release-history-note">主な変更のみ掲載しています。継続的な更新をお約束するものではありません。</p></div></details><div style="max-width:1200px;margin:0 auto;padding:0 18px 12px;text-align:right"><a href="secret-preferences.html" style="font-size:12px;text-decoration:none;color:#171717">【<span style="color:#db2777">秘密診断♡</span>】</a></div></footer>
-  <script src="data.js?v=10.21"></script><script src="core.js"></script><script src="light-data.js"></script><script src="light.js"></script><script src="practical.js"></script><script src="stage70-style-data.js?v=10.21"></script><script src="stage137-evidence.js"></script><script src="practical-adaptive-v10.6-trial.js?v=10.13"></script><script src="question-intents.js?v=10.6"></script><script src="ability-research.js"></script><script src="ha-hs-research.js"></script><script src="ha-hs-reviewed-tags.js"></script>
+  <footer class="site-footer"><div class="footer-inner"><span class="footer-logo">HERO <b>FINDER</b></span><span>非公式ファンメイド作品／#コンパス公式とは関係ありません。</span><span>v10.21 Stage258</span></div><details class="release-history"><summary>更新履歴（v10.21）</summary><div class="release-history-body"><h3>v10.21 · Stage258</h3><p>全104人の人物像の長文まとめを個別執筆。ワープの発動条件、長距離HA、通常攻撃の射程と【遠】カードの使い分け、テレパスの補助評価、スタン連携や設置型HSの評価を改善。掲載内容には未確認の情報が含まれます。</p><h3>v10.21 · Stage171</h3><p>図鑑のコラボ検索漏れを修正。人物紹介38人分の表現を整理。ポプ子＆ピピ美、アイズのカード傾向を訂正。更新履歴を追加。</p><h3>v10.20 · Stage168–170</h3><p>ご意見への回答ページと公開スプレッドシート連携を追加。日付形式による表示不具合を修正。</p><h3>Stage164–167</h3><p>キャラクター情報の訂正、推しキャラ診断の質問・適応出題を改善。</p><h3>v10.19 · Stage163</h3><p>ご意見・ご要望フォームを追加。</p><h3>v10.17–10.18 · Stage161–162</h3><p>図鑑画像の拡大と公式ヒーロー一覧リンクを追加・配置調整。</p><h3>v10.16 · Stage160</h3><p>制作者情報とコードのコピー機能を追加。</p><h3>v10.15 · Stage159</h3><p>診断結果画像の生成・保存・共有機能を追加。</p><h3>v10.14 · Stage152–158</h3><p>結果画面の表示改善と正式公開用パッケージの準備。</p><p class="release-history-note">主な変更のみ掲載しています。継続的な更新をお約束するものではありません。</p></div></details><div style="max-width:1200px;margin:0 auto;padding:0 18px 12px;text-align:right"><a href="secret-preferences.html" style="font-size:12px;text-decoration:none;color:#171717">【<span style="color:#db2777">秘密診断♡</span>】</a></div></footer>
+  <script src="data.js?v=10.21"></script><script src="core.js"></script><script src="light-data.js?v=256"></script><script src="light.js?v=256"></script><script src="practical.js"></script><script src="stage70-style-data.js?v=256"></script><script src="stage137-evidence.js"></script><script src="practical-adaptive-v10.6-trial.js?v=256"></script><script src="question-intents.js?v=256"></script><script src="ability-research.js"></script><script src="ha-hs-research.js"></script><script src="ha-hs-reviewed-tags.js"></script>
   <script src="hero-library.js"></script><script src="hero-range-display.js"></script>
   <script src="hero-library-presentation.js?v=10.21"></script>
   <script src="hero-hs-display.js"></script>
   <script src="winner-messages.js"></script>
-  <script src="share-image.js?v=10.15"></script><script src="app-v10.6-trial.js?v=10.21"></script>
+  <script src="share-image.js?v=10.15"></script><script src="personality-display.js?v=226"></script><script src="hero-long-summary.js?v=248"></script><script src="hero-charms.js?v=225"></script><script src="app-v10.6-trial.js?v=258"></script>
   <script src="creator-info.js?v=10.16"></script>
 </body></html>
